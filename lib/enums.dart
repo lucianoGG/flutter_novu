@@ -21,7 +21,7 @@ enum ProviderId {
   pusherBeams
 }
 
-enum ApiMethod { POST, GET, PUT, PATCH, DELETE }
+enum ApiMethod { post, get, put, patch, delete }
 
 @JsonEnum(fieldRename: FieldRename.screamingSnake)
 enum WorkflowStepFilterType {
@@ -62,9 +62,7 @@ enum WorkflowStepFilterChildrenOn { subscriber, payload }
 enum WorkflowTriggerType { event }
 
 @JsonEnum(fieldRename: FieldRename.snake)
-enum ChannelType {
-  inApp, email, sms, chat, push
-}
+enum ChannelType { inApp, email, sms, chat, push }
 
 enum SubscriberPreferenceLevel { global, template }
 
@@ -78,7 +76,6 @@ enum WebSocketEvent {
   const WebSocketEvent(this.value);
 }
 
-
 @JsonEnum(fieldRename: FieldRename.snake)
 enum ActorType {
   none,
@@ -91,33 +88,30 @@ enum ChannelCTAType {
   redirect,
 }
 
-enum MessageActionStatus {
-  pending, done
-}
+enum MessageActionStatus { pending, done }
 
-enum ButtonType {
-  primary, secondary
-}
+enum ButtonType { primary, secondary }
 
 enum NotificationStatus {
-  sent, error, warning;
+  sent,
+  error,
+  warning;
 }
 
 enum WorkflowType {
-  REGULAR, ECHO, BRIDGE,
+  regular,
+  echo,
+  bridge,
 }
 
-enum TriggerType {
-  event
-}
+enum TriggerType { event }
 
 @JsonEnum(fieldRename: FieldRename.pascal)
-enum TemplateVariableType {
-  string, array, boolean
-}
+enum TemplateVariableType { string, array, boolean }
 
 enum TriggerContextTypeEnum {
-  tenant, actor,
+  tenant,
+  actor,
 }
 
 @JsonEnum(fieldRename: FieldRename.screamingSnake)
@@ -131,13 +125,18 @@ enum StepContentIssueEnum {
 }
 
 @JsonEnum(fieldRename: FieldRename.screamingSnake)
-enum StepIssueEnum {
-  stepIdExists, missingRequiredValue
-}
+enum StepIssueEnum { stepIdExists, missingRequiredValue }
 
 @JsonEnum(fieldRename: FieldRename.screamingSnake)
 enum BuilderFieldType {
-  boolean, text, date, number, statement, list, multiList, group
+  boolean,
+  text,
+  date,
+  number,
+  statement,
+  list,
+  multiList,
+  group
 }
 
 enum FilterPartTypeEnum {
@@ -158,9 +157,7 @@ enum TimeOperator {
 }
 
 @JsonEnum(fieldRename: FieldRename.snake)
-enum StepType {
-  inApp, email, sms, chat, push, digest, trigger, delay, custom
-}
+enum StepType { inApp, email, sms, chat, push, digest, trigger, delay, custom }
 
 enum MessageTemplateContentType { editor, customHtml }
 
@@ -169,9 +166,7 @@ enum EmailBlockType {
   text,
 }
 
-enum MarkNotificationAs {
-  read, unread, seen, unseen, archive, unarchive
-}
+enum MarkNotificationAs { read, unread, seen, unseen, archive, unarchive }
 
 enum MarkAllNotificationAs {
   read('read'),
@@ -183,9 +178,7 @@ enum MarkAllNotificationAs {
   const MarkAllNotificationAs(this.value);
 }
 
-enum PreferenceOverrideSource {
-  subscriber, template, workflowOverride
-}
+enum PreferenceOverrideSource { subscriber, template, workflowOverride }
 
 enum CardActionPosition { bottom, title, menu }
 

@@ -8,7 +8,7 @@ part 'subscriber.g.dart';
 @JsonSerializable()
 class ChannelCredential {
   /// Webhook url used by chat app integrations. The webhook should be obtained from the chat app provider.
-  late final String webhookUrl;
+  final String? webhookUrl;
 
   /// Channel specification for Mattermost chat notifications
   final String? channel;
@@ -32,7 +32,7 @@ class ChannelCredential {
   final String? externalUrl;
 
   ChannelCredential({
-    required this.webhookUrl,
+    this.webhookUrl,
     this.channel,
     this.deviceTokens = const [],
     this.alertUid,
@@ -60,13 +60,13 @@ class Channel {
   late final ChannelCredential credentials;
 
   /// Id of the integration that is used for this channel
-  late final String integrationId;
+  final String? integrationId;
 
   Channel({
     required this.providerId,
     this.integrationIdentifier,
     required this.credentials,
-    required this.integrationId,
+    this.integrationId,
   });
 
   factory Channel.fromJson(Map<String, dynamic> json) => _$ChannelFromJson(json);
@@ -167,11 +167,11 @@ class Subscriber {
 
   /// Channels settings for subscriber
   @JsonKey(includeToJson: false)
-  final List<Channel> channels = [];
+  final List<Channel> channels;
 
   /// Topics that subscriber belongs to
   @JsonKey(includeToJson: false)
-  final List<String> topics = [];
+  final List<String> topics;
 
   @JsonKey(includeToJson: false)
   final bool? isOnline;
@@ -185,13 +185,13 @@ class Subscriber {
   @JsonKey(name: '_environmentId', includeToJson: false)
   final String? environmentId;
 
-  @JsonKey(name: '_environmentId', includeToJson: false)
+  @JsonKey(includeToJson: false)
   final bool? deleted;
 
-  @JsonKey(name: '_environmentId', includeToJson: false)
+  @JsonKey(includeToJson: false)
   final DateTime? createdAt;
 
-  @JsonKey(name: '_environmentId', includeToJson: false)
+  @JsonKey(includeToJson: false)
   final DateTime? updatedAt;
 
   @JsonKey(name: '__v', includeToJson: false)
@@ -208,6 +208,8 @@ class Subscriber {
     this.timezone,
     this.data,
     required this.subscriberId,
+    this.channels = const [],
+    this.topics = const [],
     this.isOnline,
     this.lastOnlineAt,
     this.organizationId,

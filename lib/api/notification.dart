@@ -16,7 +16,7 @@ class NotificationApi extends BaseApi {
     String? transactionId,
   }) async {
     Map<String, dynamic> response = await request(
-      method: ApiMethod.GET,
+      method: ApiMethod.get,
       endpoint: 'notifications',
       query: {
         if (channels != null) 'channels': channels.join(','),

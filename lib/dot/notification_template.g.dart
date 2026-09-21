@@ -352,7 +352,7 @@ Map<String, dynamic> _$NotificationTemplateToJson(
     };
 
 const _$WorkflowTypeEnumMap = {
-  WorkflowType.REGULAR: 'REGULAR',
-  WorkflowType.ECHO: 'ECHO',
-  WorkflowType.BRIDGE: 'BRIDGE',
+  WorkflowType.regular: 'REGULAR',
+  WorkflowType.echo: 'ECHO',
+  WorkflowType.bridge: 'BRIDGE',
 };

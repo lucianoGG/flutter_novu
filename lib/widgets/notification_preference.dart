@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_novu/dot.dart' as Dot;
+import 'package:flutter_novu/dot.dart' as dot;
 import 'package:flutter_novu/enums.dart';
 import 'package:flutter_novu/inbox.dart';
 import 'package:flutter_novu/types.dart';
@@ -9,7 +9,7 @@ import '../generated/app_localizations.dart';
 import 'list_item.dart';
 
 class NotificationPreference extends StatefulWidget {
-  final Dot.PreferencesResponse preference;
+  final dot.PreferencesResponse preference;
   final HeadlessService headlessService;
   // final dynamic headlessService;
 
@@ -20,10 +20,10 @@ class NotificationPreference extends StatefulWidget {
   });
 
   @override
-  _NotificationPreferenceState createState() => _NotificationPreferenceState();
+  NotificationPreferenceState createState() => NotificationPreferenceState();
 }
 
-class _NotificationPreferenceState extends State<NotificationPreference> {
+class NotificationPreferenceState extends State<NotificationPreference> {
   bool collapsed = true;
   late Map<String, bool> values;
 
@@ -46,7 +46,8 @@ class _NotificationPreferenceState extends State<NotificationPreference> {
     });
     var workflow = widget.preference.workflow;
     if (workflow != null) {
-      await widget.headlessService.updateWorkflowPreferences(workflow.id, {channel: value});
+      await widget.headlessService
+          .updateWorkflowPreferences(workflow.id, {channel: value});
     } else {
       await widget.headlessService.updateGlobalPreferences({channel: value});
     }
@@ -57,9 +58,14 @@ class _NotificationPreferenceState extends State<NotificationPreference> {
   Widget build(BuildContext context) {
     var workflow = widget.preference.workflow;
     return ExtendedCard(
-      title: workflow?.name ?? SNovu.of(context)?.globalPreferences ?? 'Global Preferences',
+      title: workflow?.name ??
+          SNovu.of(context)?.globalPreferences ??
+          'Global Preferences',
       titleStyle: Theme.of(context).textTheme.titleMedium,
-      subtitle: values.keys.where((c) => values[c]!).map((c) => SNovu.of(context)?.novuChannel(c) ?? c).join(', '),
+      subtitle: values.keys
+          .where((c) => values[c]!)
+          .map((c) => SNovu.of(context)?.novuChannel(c) ?? c)
+          .join(', '),
       subtitleStyle: Theme.of(context).textTheme.titleSmall,
       color: Theme.of(context).colorScheme.surfaceContainerLowest,
       padding: 10,

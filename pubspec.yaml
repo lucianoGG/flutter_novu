@@ -1,7 +1,7 @@
 name: flutter_novu
 description: "Novu's Flutter SDK for building custom inbox notification experiences."
-version: 1.1.0
-repository: https://github.com/hachther/flutter_novu
+version: 1.2.0
+repository: https://github.com/lucianoGG/flutter_novu
 
 environment:
   sdk: ^3.5.4
@@ -23,6 +23,8 @@ dependencies:
   flutter_platform_widgets: ^10.0.1
   dio: ^5.7.0
   shimmer: ^3.0.0
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.1.6
 
 dev_dependencies:
   flutter_test:

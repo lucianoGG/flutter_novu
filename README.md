@@ -8,6 +8,7 @@ Let's do a quick recap on how you can easily use it in your application.
 
 - Seamless integration with the Novu notification platform.
 - Support for in-app notifications.
+- Push notifications via FCM with a OneSignal-like API (`NovuPush`).
 - Flexible configurations for custom notification needs.
 - Easy-to-use APIs for sending, managing, and receiving notifications.
 
@@ -58,6 +59,61 @@ Inbox(
 )
 ```
 
+### Localization (Inbox UI)
+
+The Inbox screens use `SNovu` localizations (`en`, `fr`, `pt`, `pt_BR`). Register the delegate in the host `MaterialApp` / `CupertinoApp`:
+
+```dart
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_novu/generated/app_localizations.dart';
+
+MaterialApp(
+  localizationsDelegates: const [
+    SNovu.delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ],
+  supportedLocales: SNovu.supportedLocales, // en, fr, pt, pt_BR
+  // locale: Locale('pt', 'BR'), // optional override
+  // ...
+);
+```
+
+## Push notifications (FCM)
+
+Inbox covers **in-app**. Mobile push (background/foreground) uses Firebase Cloud Messaging, orchestrated by Novu.
+
+1. Paste your Firebase **service account JSON** into Novu → Integration Store → FCM (same idea as OneSignal’s dashboard).
+2. Configure Firebase in the host app (`google-services.json` / `GoogleService-Info.plist`, iOS Push capability).
+3. Use `NovuPush` so the app gets the FCM token and syncs it through **your backend** (never ship `NOVU_SECRET_KEY` in the app).
+
+```dart
+import 'package:flutter_novu/push.dart';
+
+final registrar = HttpTokenRegistrar(
+  baseUrl: 'https://api.myapp.com',
+  headers: {'Authorization': 'Bearer $jwt'},
+);
+
+await NovuPush.initialize(
+  firebaseOptions: DefaultFirebaseOptions.currentPlatform,
+  tokenRegistrar: registrar.register,
+  tokenUnregistrar: registrar.unregister,
+);
+
+await NovuPush.login(subscriberId: userId);
+
+NovuPush.onForegroundMessage.listen((message) { /* ... */ });
+NovuPush.onNotificationOpened.listen((message) { /* deep link */ });
+
+await NovuPush.logout();
+```
+
+Full setup, backend contract (`POST/DELETE /push/register`), and Android/iOS background checklist: **[docs/PUSH_SETUP.md](docs/PUSH_SETUP.md)**.
+
+Also see: [Novu FCM docs](https://docs.novu.co/platform/integrations/push/fcm) · [onesignal_flutter](https://pub.dev/packages/onesignal_flutter) (reference DX).
+
 ## Contributing
 
 Contributions are welcome! If you’d like to improve the package or add new features:
@@ -70,6 +126,7 @@ Contributions are welcome! If you’d like to improve the package or add new fea
 
 - Novu Documentation: https://docs.novu.co
 - Flutter Documentation: https://flutter.dev/docs
+- Push setup guide: [docs/PUSH_SETUP.md](docs/PUSH_SETUP.md)
 
 ## License
 

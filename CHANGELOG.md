@@ -1,3 +1,10 @@
+## 1.2.0
+
+* Add: `NovuPush` (FCM) with OneSignal-like `initialize` / `login` / `logout` and message streams.
+* Add: `SubscriberApi` credentials helpers (`updateCredentials`, `addDeviceToken`, `removeDeviceToken`, `clearCredentials`).
+* Add: `HttpTokenRegistrar` for backend `POST/DELETE /push/register` contract.
+* Add: Push setup guide in `docs/PUSH_SETUP.md`.
+
 ## 1.1.0
 
 * Fix: Add null-safety fallbacks for `SNovu.of(context)` to prevent runtime crashes when localization is unavailable.

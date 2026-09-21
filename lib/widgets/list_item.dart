@@ -22,7 +22,7 @@ class ListItem extends StatelessWidget {
   final int subtitleMaxLines;
   //  contentPadding: EdgeInsets.symmetric(horizontal: 16),
 
-  ListItem(
+  const ListItem(
       {super.key,
       this.disabled = false,
       required this.title,
@@ -49,7 +49,7 @@ class ListItem extends StatelessWidget {
           scale: 0.7,
           child: Switch.adaptive(
             value: value == true,
-            activeColor: Theme.of(context).colorScheme.primary,
+            activeTrackColor: Theme.of(context).colorScheme.primary,
             onChanged: (bool value) {
               if (onChange != null) {
                 onChange!(value);

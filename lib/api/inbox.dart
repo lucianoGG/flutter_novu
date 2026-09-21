@@ -13,7 +13,7 @@ class InboxApi extends BaseApi {
     List<String>? tags,
   }) async {
     Map<String, dynamic> response = await request(
-      method: ApiMethod.GET,
+      method: ApiMethod.get,
       endpoint: 'inbox/notifications',
       query: {
         'offset': page * limit,

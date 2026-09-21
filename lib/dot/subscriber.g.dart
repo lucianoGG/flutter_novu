@@ -8,7 +8,7 @@ part of 'subscriber.dart';
 
 ChannelCredential _$ChannelCredentialFromJson(Map<String, dynamic> json) =>
     ChannelCredential(
-      webhookUrl: json['webhookUrl'] as String,
+      webhookUrl: json['webhookUrl'] as String?,
       channel: json['channel'] as String?,
       deviceTokens: (json['deviceTokens'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -35,10 +35,15 @@ Map<String, dynamic> _$ChannelCredentialToJson(ChannelCredential instance) =>
 
 Channel _$ChannelFromJson(Map<String, dynamic> json) => Channel(
       providerId: $enumDecode(_$ProviderIdEnumMap, json['providerId']),
-      integrationIdentifier: json['_integrationIdentifier'] as String?,
+      integrationIdentifier: (json['_integrationIdentifier'] ??
+          json['integrationIdentifier']) as String?,
       credentials: ChannelCredential.fromJson(
-          json['credentials'] as Map<String, dynamic>),
-      integrationId: json['integrationId'] as String,
+        Map<String, dynamic>.from(
+          (json['credentials'] as Map?) ?? const <String, dynamic>{},
+        ),
+      ),
+      integrationId:
+          (json['integrationId'] ?? json['_integrationId']) as String?,
     );
 
 Map<String, dynamic> _$ChannelToJson(Channel instance) => <String, dynamic>{
@@ -129,16 +134,28 @@ Subscriber _$SubscriberFromJson(Map<String, dynamic> json) => Subscriber(
       timezone: json['timezone'] as String?,
       data: json['data'] as Map<String, dynamic>?,
       subscriberId: json['subscriberId'] as String,
+      channels: (json['channels'] as List<dynamic>?)
+              ?.map((e) => Channel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      topics: (json['topics'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       isOnline: json['isOnline'] as bool?,
       lastOnlineAt: json['lastOnlineAt'] == null
           ? null
           : DateTime.parse(json['lastOnlineAt'] as String),
-      organizationId: json['_organizationId'] as String,
-      environmentId: json['_environmentId'] as String,
-      deleted: json['_environmentId'] as bool,
-      createdAt: DateTime.parse(json['_environmentId'] as String),
-      updatedAt: DateTime.parse(json['_environmentId'] as String),
-      v: json['__v'] as String,
+      organizationId: json['_organizationId'] as String?,
+      environmentId: json['_environmentId'] as String?,
+      deleted: json['deleted'] as bool?,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.parse(json['updatedAt'] as String),
+      v: json['__v']?.toString(),
     );
 
 Map<String, dynamic> _$SubscriberToJson(Subscriber instance) =>

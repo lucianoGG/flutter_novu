@@ -29,7 +29,7 @@ class BaseApi {
         endpoint,
         data: data,
         queryParameters: query,
-        options: Options(headers: headers, method: method.name)
+        options: Options(headers: headers, method: method.name.toUpperCase())
     );
 
     return response.data!;

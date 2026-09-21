@@ -74,44 +74,46 @@ class NotificationTile extends StatelessWidget {
             launchURL(notification.redirect!.url!);
           }
         },
-        child: renderNotification?.call(notification) ?? Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          color: notification.isRead
-              ? Theme.of(context).canvasColor
-              : Theme.of(context).primaryColor.withOpacity(0.05),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: renderNotification?.call(notification) ??
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: notification.isRead
+                  ? Theme.of(context).canvasColor
+                  : Theme.of(context).primaryColor.withValues(alpha: 0.05),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildReadIndicator(),
-                  const SizedBox(width: 12),
-                  if (notification.avatar?.isNotEmpty == true) ...[
-                    renderAvatar?.call(notification) ?? _buildAvatar(),
-                    const SizedBox(width: 12),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        renderSubject?.call(notification) ?? _buildHeader(context),
-                        const SizedBox(height: 4),
-                        renderBody?.call(notification) ?? _buildContent(),
-                        const SizedBox(height: 8),
-                        _buildFooter(context),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildReadIndicator(),
+                      const SizedBox(width: 12),
+                      if (notification.avatar?.isNotEmpty == true) ...[
+                        renderAvatar?.call(notification) ?? _buildAvatar(),
+                        const SizedBox(width: 12),
                       ],
-                    ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            renderSubject?.call(notification) ??
+                                _buildHeader(context),
+                            const SizedBox(height: 4),
+                            renderBody?.call(notification) ?? _buildContent(),
+                            const SizedBox(height: 8),
+                            _buildFooter(context),
+                          ],
+                        ),
+                      ),
+                      _buildActionsButton(context),
+                    ],
                   ),
-                  _buildActionsButton(context),
+                  if (notification.primaryAction != null ||
+                      notification.secondaryAction != null)
+                    _buildActionButtons(context),
                 ],
               ),
-              if (notification.primaryAction != null ||
-                  notification.secondaryAction != null)
-                _buildActionButtons(context),
-            ],
-          ),
-        ),
+            ),
       ),
     );
   }
@@ -134,7 +136,8 @@ class NotificationTile extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -291,11 +294,14 @@ class NotificationTile extends StatelessWidget {
     if (difference.inMinutes < 1) {
       return SNovu.of(context)?.justNow ?? 'Just now';
     } else if (difference.inMinutes < 60) {
-      return SNovu.of(context)?.dateAgo('${difference.inMinutes}m') ?? '${difference.inMinutes}m ago';
+      return SNovu.of(context)?.dateAgo('${difference.inMinutes}m') ??
+          '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
-      return SNovu.of(context)?.dateAgo('${difference.inHours}h') ?? '${difference.inHours}h ago';
+      return SNovu.of(context)?.dateAgo('${difference.inHours}h') ??
+          '${difference.inHours}h ago';
     } else if (difference.inDays < 7) {
-      return SNovu.of(context)?.dateAgo('${difference.inDays}d') ?? '${difference.inDays}d ago';
+      return SNovu.of(context)?.dateAgo('${difference.inDays}d') ??
+          '${difference.inDays}d ago';
     } else {
       return DateFormat.yMMMd().format(date);
     }

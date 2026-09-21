@@ -27,7 +27,8 @@ class Inbox extends StatefulWidget {
   final Function(InboxNotification notification)? onPrimaryActionTap;
   final Function(InboxNotification notification)? onSecondaryActionTap;
 
-  const Inbox({super.key,
+  const Inbox({
+    super.key,
     this.backendUrl = 'https://eu.api.novu.co',
     this.socketUrl = 'https://eu.ws.novu.co',
     required this.applicationIdentifier,
@@ -44,7 +45,8 @@ class Inbox extends StatefulWidget {
     this.onNotificationTap,
     this.onPrimaryActionTap,
     this.onSecondaryActionTap,
-  }): assert(subscriberId != null || subscriber != null, 'Subscriber or subscriberId is required!');
+  }) : assert(subscriberId != null || subscriber != null,
+            'Subscriber or subscriberId is required!');
 
   @override
   State<Inbox> createState() => _InboxState();
@@ -57,7 +59,6 @@ class _InboxState extends State<Inbox> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     _headless = HeadlessService(
@@ -87,18 +88,20 @@ class _InboxState extends State<Inbox> {
   @override
   Widget build(BuildContext context) {
     void onTap() {
-      Navigator.push(context, MaterialPageRoute<void>(
-        builder: (context) => NotificationsScreen(
-          headlessService: _headless,
-          renderNotification: widget.renderNotification,
-          renderAvatar: widget.renderAvatar,
-          renderSubject: widget.renderSubject,
-          renderBody: widget.renderBody,
-          onNotificationTap: widget.onNotificationTap,
-          onPrimaryActionTap: widget.onPrimaryActionTap,
-          onSecondaryActionTap: widget.onSecondaryActionTap,
-        ),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (context) => NotificationsScreen(
+              headlessService: _headless,
+              renderNotification: widget.renderNotification,
+              renderAvatar: widget.renderAvatar,
+              renderSubject: widget.renderSubject,
+              renderBody: widget.renderBody,
+              onNotificationTap: widget.onNotificationTap,
+              onPrimaryActionTap: widget.onPrimaryActionTap,
+              onSecondaryActionTap: widget.onSecondaryActionTap,
+            ),
+          ));
     }
 
     if (widget.renderBell != null) {
@@ -110,7 +113,7 @@ class _InboxState extends State<Inbox> {
       );
     }
 
-    var icon =  IconButton(
+    var icon = IconButton(
       icon: widget.icon ?? const Icon(Icons.notifications),
       onPressed: () {
         onTap();

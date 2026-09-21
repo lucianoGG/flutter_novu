@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_fr.dart';
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -94,7 +95,9 @@ abstract class SNovu {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('fr')
+    Locale('fr'),
+    Locale('pt'),
+    Locale('pt', 'BR')
   ];
 
   /// No description provided for @inbox.
@@ -246,19 +249,33 @@ class _SNovuDelegate extends LocalizationsDelegate<SNovu> {
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'fr'].contains(locale.languageCode);
+      <String>['en', 'fr', 'pt'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_SNovuDelegate old) => false;
 }
 
 SNovu lookupSNovu(Locale locale) {
+  // Lookup logic when language+country codes are specified.
+  switch (locale.languageCode) {
+    case 'pt':
+      {
+        switch (locale.countryCode) {
+          case 'BR':
+            return SNovuPtBr();
+        }
+        break;
+      }
+  }
+
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
     case 'en':
       return SNovuEn();
     case 'fr':
       return SNovuFr();
+    case 'pt':
+      return SNovuPt();
   }
 
   throw FlutterError(
