@@ -9,7 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_novu/push/background_handler.dart';
 import 'package:flutter_novu/push/types.dart';
 
-/// OneSignal-like push facade on top of FCM, synced to Novu via your backend.
+/// OneSignal-like push facade, synced to Novu via your backend.
+///
+/// - **Android:** registers the FCM token (`provider: fcm`).
+/// - **iOS:** registers the APNs hex token only (`provider: apns`).
+///   FCM `onTokenRefresh` / `getToken()` are **not** synced on iOS — that was
+///   causing `APA91…` tokens to be stored as APNs credentials in Novu.
 ///
 /// Typical usage:
 /// ```dart
@@ -20,15 +25,13 @@ import 'package:flutter_novu/push/types.dart';
 /// );
 ///
 /// await NovuPush.login(subscriberId: userId);
-/// NovuPush.onForegroundMessage.listen(...);
-/// NovuPush.onNotificationOpened.listen(...);
-/// await NovuPush.logout();
 /// ```
 class NovuPush {
   NovuPush._();
 
-  static const _prefsTokenKey = 'novu_push_fcm_token';
+  static const _prefsTokenKey = 'novu_push_device_token';
   static const _prefsSubscriberKey = 'novu_push_subscriber_id';
+  static const _legacyPrefsTokenKey = 'novu_push_fcm_token';
 
   static final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
   static final StreamController<RemoteMessage> _foregroundController =
@@ -51,7 +54,7 @@ class NovuPush {
   /// Current Novu subscriber id after [login], if any.
   static String? get currentSubscriberId => _subscriberId;
 
-  /// Last known FCM token (may be null before [login] / permission grant).
+  /// Last known device token synced to the backend (FCM or APNs hex).
   static String? get currentToken => _token;
 
   /// Stream of messages received while the app is in the foreground.
@@ -61,6 +64,8 @@ class NovuPush {
   /// Stream of messages that opened the app from background/terminated.
   static Stream<RemoteMessage> get onNotificationOpened =>
       _openedController.stream;
+
+  static bool get _isIos => !kIsWeb && Platform.isIOS;
 
   /// Initialize Firebase Messaging and wire listeners.
   ///
@@ -92,7 +97,8 @@ class NovuPush {
       onBackgroundMessage ?? novuPushDefaultBackgroundHandler,
     );
 
-    _foregroundSub = FirebaseMessaging.onMessage.listen(_foregroundController.add);
+    _foregroundSub =
+        FirebaseMessaging.onMessage.listen(_foregroundController.add);
     _openedSub =
         FirebaseMessaging.onMessageOpenedApp.listen(_openedController.add);
 
@@ -101,8 +107,17 @@ class NovuPush {
       _openedController.add(initial);
     }
 
+    // FCM token refresh is Android-only for Novu sync.
+    // On iOS, syncing FCM here reintroduced APA91… tokens into APNs credentials.
     _tokenRefreshSub =
         FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+      if (_isIos) {
+        debugPrint(
+          '[NovuPush] iOS ignoring FCM onTokenRefresh '
+          '(len=${token.length} fcmLike=${PushTokenRegistration.looksLikeFcmToken(token)})',
+        );
+        return;
+      }
       _token = token;
       await _prefs.setString(_prefsTokenKey, token);
       if (_subscriberId != null) {
@@ -111,7 +126,8 @@ class NovuPush {
     });
 
     _subscriberId = await _prefs.getString(_prefsSubscriberKey);
-    _token = await _prefs.getString(_prefsTokenKey);
+    _token = await _prefs.getString(_prefsTokenKey) ??
+        await _prefs.getString(_legacyPrefsTokenKey);
 
     if (requestPermissionOnInit) {
       await requestPermission();
@@ -142,17 +158,17 @@ class NovuPush {
     );
   }
 
-  /// Bind this device to a Novu subscriber: get FCM token and sync via registrar.
+  /// Bind this device to a Novu subscriber and sync the platform token.
   ///
-  /// Returns the FCM token, or null if unavailable.
+  /// Returns the synced token (APNs hex on iOS, FCM on Android), or null.
   static Future<String?> login({required String subscriberId}) async {
     _ensureInitialized();
     await requestPermission();
 
-    final token = await FirebaseMessaging.instance.getToken();
     _subscriberId = subscriberId;
     await _prefs.setString(_prefsSubscriberKey, subscriberId);
 
+    final token = await _resolveDeviceToken();
     if (token != null) {
       _token = token;
       await _prefs.setString(_prefsTokenKey, token);
@@ -166,29 +182,32 @@ class NovuPush {
   static Future<void> logout() async {
     _ensureInitialized();
     final subscriberId = _subscriberId;
-    final token = _token ?? await FirebaseMessaging.instance.getToken();
+    final token = _token ?? await _resolveDeviceToken();
 
     if (subscriberId != null &&
         token != null &&
         _tokenUnregistrar != null) {
-      await _tokenUnregistrar!(PushTokenRegistration(
-        subscriberId: subscriberId,
-        token: token,
-        platform: _platformLabel(),
-      ));
+      await _tokenUnregistrar!(_registration(subscriberId, token));
     }
 
     _subscriberId = null;
     _token = null;
     await _prefs.remove(_prefsSubscriberKey);
     await _prefs.remove(_prefsTokenKey);
+    await _prefs.remove(_legacyPrefsTokenKey);
   }
 
   /// Force a token refresh and re-sync if logged in.
+  ///
+  /// On iOS this only re-reads the APNs token (does not delete/sync FCM).
   static Future<String?> refreshToken() async {
     _ensureInitialized();
-    await FirebaseMessaging.instance.deleteToken();
-    final token = await FirebaseMessaging.instance.getToken();
+
+    if (!_isIos) {
+      await FirebaseMessaging.instance.deleteToken();
+    }
+
+    final token = await _resolveDeviceToken();
     if (token != null) {
       _token = token;
       await _prefs.setString(_prefsTokenKey, token);
@@ -212,17 +231,71 @@ class NovuPush {
     _initialized = false;
   }
 
+  /// APNs hex on iOS (with short retry); FCM token on Android.
+  static Future<String?> _resolveDeviceToken() async {
+    if (_isIos) {
+      String? apns = await FirebaseMessaging.instance.getAPNSToken();
+      for (var i = 0; i < 10 && apns == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        apns = await FirebaseMessaging.instance.getAPNSToken();
+      }
+
+      if (apns == null) {
+        debugPrint('[NovuPush] iOS APNs unavailable (getAPNSToken=null)');
+        return null;
+      }
+
+      final fcmLike = PushTokenRegistration.looksLikeFcmToken(apns);
+      debugPrint(
+        '[NovuPush] iOS APNs OK len=${apns.length} fcmLike=$fcmLike',
+      );
+      if (fcmLike) {
+        debugPrint(
+          '[NovuPush] WARNING: APNs token looks like FCM — refusing sync',
+        );
+        return null;
+      }
+      return apns;
+    }
+
+    final fcm = await FirebaseMessaging.instance.getToken();
+    if (fcm == null) {
+      debugPrint('[NovuPush] Android FCM unavailable (getToken=null)');
+      return null;
+    }
+    debugPrint(
+      '[NovuPush] Android FCM OK len=${fcm.length} '
+      'fcmLike=${PushTokenRegistration.looksLikeFcmToken(fcm)}',
+    );
+    return fcm;
+  }
+
   static Future<void> _syncToken(String token) async {
     final subscriberId = _subscriberId;
     final registrar = _tokenRegistrar;
     if (subscriberId == null || registrar == null) {
       return;
     }
-    await registrar(PushTokenRegistration(
+
+    final registration = _registration(subscriberId, token);
+    debugPrint(
+      '[NovuPush] sync provider=${registration.provider} '
+      'platform=${registration.platform} '
+      'len=${token.length} fcmLike=${registration.fcmLike}',
+    );
+    await registrar(registration);
+  }
+
+  static PushTokenRegistration _registration(
+    String subscriberId,
+    String token,
+  ) {
+    return PushTokenRegistration(
       subscriberId: subscriberId,
       token: token,
       platform: _platformLabel(),
-    ));
+      provider: _isIos ? 'apns' : 'fcm',
+    );
   }
 
   static String _platformLabel() {

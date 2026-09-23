@@ -1,3 +1,8 @@
+## 1.2.1
+
+* Fix: On iOS, sync APNs hex via `getAPNSToken()` only; ignore FCM `onTokenRefresh` / `getToken()` so `APA91…` tokens are not stored as APNs.
+* Add: `provider` (`fcm` | `apns`) on `PushTokenRegistration`; HTTP body uses `deviceToken` / `deviceOs`.
+
 ## 1.2.0
 
 * Add: `NovuPush` (FCM) with OneSignal-like `initialize` / `login` / `logout` and message streams.

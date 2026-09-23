@@ -60,17 +60,25 @@ Official references:
 
 ```json
 {
-  "subscriberId": "user-123",
-  "token": "<fcm-device-token>",
-  "platform": "android"
+  "deviceToken": "<fcm-or-apns-hex>",
+  "deviceOs": "android"
 }
 ```
 
+On **iOS**, `NovuPush` sends the **APNs hex** token with `deviceOs: "ios"` (never the FCM `APA91…` token). On Android it sends FCM with `deviceOs: "android"`.
+
+`HttpTokenRegistrar` posts exactly that body (`deviceToken` / `deviceOs`). The subscriber is usually resolved from the auth header.
+
+Internally the registration also knows `provider` (`fcm` | `apns`) for custom registrars via `toJsonFull()`.
+
 Backend should:
 
-1. Authenticate the user.
-2. Merge the token into the subscriber’s FCM `deviceTokens` (Novu **replaces** the whole array on update).
-3. Call Novu:
+1. Authenticate the user (resolve `subscriberId`).
+2. Route by `deviceOs` / token shape:
+   - `android` → Novu credentials `providerId: "fcm"`
+   - `ios` → Novu credentials `providerId: "apns"` (hex token, not `APA91…`)
+3. Merge the token into that provider’s `deviceTokens` (Novu **replaces** the whole array on update).
+4. Call Novu:
 
 ```http
 PUT https://api.novu.co/v1/subscribers/{subscriberId}/credentials
@@ -80,12 +88,14 @@ Content-Type: application/json
 {
   "providerId": "fcm",
   "credentials": {
-    "deviceTokens": ["existing-token", "<fcm-device-token>"]
+    "deviceTokens": ["existing-token", "<device-token>"]
   }
 }
 ```
 
-Optional: `"integrationIdentifier": "<id-from-novu-dashboard>"` when you have multiple FCM integrations.
+Use `"providerId": "apns"` when `deviceOs` is `ios`.
+
+If iOS logs show `fcmLike=false` but Novu still has `APA91…`, another backend path (e.g. `/devices`) is overwriting credentials — fix that path, not the app.
 
 #### Unregister (logout)
 
@@ -149,6 +159,8 @@ await api.clearCredentials(subscriberId, ProviderId.fcm);
 - [ ] Method swizzling left enabled (required by FCM Flutter plugin)
 - [ ] User granted notification permission
 - [ ] If the user swipes the app away from the app switcher, they may need to reopen it before background delivery resumes
+- [ ] After toggling notification permission, logs should show `[NovuPush] iOS APNs OK … fcmLike=false` (hex token, not `APA91…`)
+- [ ] Novu subscriber credentials for APNs must be hex; if `fcmLike=false` in logs but Novu still has `APA91…`, the backend is overwriting
 
 ### Flutter / FCM handlers
 

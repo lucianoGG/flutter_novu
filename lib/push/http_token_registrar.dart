@@ -4,8 +4,13 @@ import 'package:flutter_novu/push/types.dart';
 /// Builds [TokenRegistrar] / [TokenUnregistrar] that call your app backend.
 ///
 /// Expected backend contract (see `docs/PUSH_SETUP.md`):
-/// - `POST {baseUrl}/push/register` with body `{ subscriberId, token, platform }`
-/// - `DELETE {baseUrl}/push/register` with body `{ subscriberId, token, platform }`
+/// - `POST {baseUrl}/push/register` with body `{ "deviceToken", "deviceOs" }`
+/// - `DELETE {baseUrl}/push/register` with body `{ "deviceToken", "deviceOs" }`
+///
+/// - Android: `deviceToken` = FCM, `deviceOs` = `android`
+/// - iOS: `deviceToken` = APNs hex (not FCM/`APA91…`), `deviceOs` = `ios`
+///
+/// Subscriber is typically taken from the auth header on the backend.
 class HttpTokenRegistrar {
   final Dio _client;
   final String registerPath;
